@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import { prismaConnection } from "./database/prismaConnect";
 import orderRoutes from "./routes/orderRoutes";
 import { internalError } from "./middleware/internalError";
+import morgan from "morgan";
 
 export default class App {
 
@@ -37,6 +38,7 @@ export default class App {
 
   public middlewares(): void {
     this.app.use(express.json());
+    this.app.use(morgan("dev"));
   }
 
   public routes(): void {
