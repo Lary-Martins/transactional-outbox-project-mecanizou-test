@@ -8,7 +8,7 @@ export default class App {
   private app: Express;
   private port: string;
   private apiRoutes = {
-    orders: "/ordes"
+    orders: "/orders"
   }
 
   constructor() {
