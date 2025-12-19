@@ -1,5 +1,6 @@
 
 1. **Atomicidade:** Onde no código está garantida a atomicidade entre atualizar `orders` e inserir o evento na outbox?
+      É garantido através do recurto `$transaction` da Prisma, ele garante que caso ocorra alguma falha na atualização da entidade `orders` ou no registro do evento, toda a operação seja dedsfeita automaticamente. 
 
 2. **Publicação duplicada:** Como seu worker evita publicar o mesmo evento duas vezes? (Ou: se publicar 2x, por que isso não quebra o sistema?)
 
