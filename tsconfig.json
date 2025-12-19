@@ -7,9 +7,9 @@
     // See also https://aka.ms/tsconfig/module
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "esModuleInterop": true,    
-    "types": [],
+    "types": ["jest", "node"],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
