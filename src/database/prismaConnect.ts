@@ -15,4 +15,4 @@ class Database {
   }
 }
 
-export const prismaConnect = Database.getInstance();
+export const prismaConnection = Database.getInstance();

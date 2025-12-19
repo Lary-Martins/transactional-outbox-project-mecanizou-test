@@ -1,5 +1,7 @@
 import express, { Express } from "express";
-import { prismaConnect } from "./database/prismaConnect";
+import { prismaConnection } from "./database/prismaConnect";
+import orderRoutes from "./routes/orderRoutes";
+import { internalError } from "./middleware/internalError";
 
 export default class App {
 
@@ -13,6 +15,9 @@ export default class App {
     this.app =  express();
     this.port = process.env.PORT || "3001";
     this.dbConnection();
+    this.middlewares();
+    this.routes();
+    this.errorHandler();
   }
 
   public listen(): void {
@@ -23,10 +28,22 @@ export default class App {
 
   public async dbConnection(): Promise <void> {
     try {
-      await prismaConnect;
-      console.log('Database online')
+      await prismaConnection;
+      console.log('Database online');
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   } 
+
+  public middlewares(): void {
+    this.app.use(express.json());
+  }
+
+  public routes(): void {
+    this.app.use(this.apiRoutes.orders, orderRoutes);
+  }
+
+  public errorHandler(): void {
+    this.app.use(internalError);
+  }
 };
