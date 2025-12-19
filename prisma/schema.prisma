@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  CANCELLED
+}
+
+enum OutboxStatus {
+  PENDING
+  PUBLISHED
+  FAILED
+}
+
+model Order {
+  id        String      @id @db.Uuid 
+  amount    Int        
+  status    OrderStatus @default(CREATED)
+  @@map("orders")
+}
+
+model OutboxEvent {
+  id        String       @id @db.Uuid
+  eventType String       @map("event_type")
+  status    OutboxStatus @default(PENDING)
+  payload   Json   
+  attempts      Int      @default(0)
+  nextAttemptAt DateTime @default(now()) @map("next_attempt_at")
+  createdAt     DateTime @default(now()) @map("created_at")      
+}
+
+model Invoice {
+  id      String @id @db.Uuid
+  orderId String @unique @map("order_id") @db.Uuid
+  amount  Int
+
+  @@map("invoices")
+}
