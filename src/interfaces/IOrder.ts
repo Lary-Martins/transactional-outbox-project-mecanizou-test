@@ -18,5 +18,5 @@ export enum EventType {
 
 export interface IOrderResponse {
   code: StatusCodes,
-  data: IOrder
+  message: IOrder | string
 }
