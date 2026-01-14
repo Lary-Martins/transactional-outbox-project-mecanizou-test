@@ -1,5 +1,6 @@
 import request from 'supertest';
 import App from '../../app';
+import { v4 as uuidv4 } from 'uuid';
 import { prismaConnection } from '../../database/prismaConnect';
 
 const appInstance = new App();
@@ -16,7 +17,7 @@ describe('Order Integration Tests', () => {
 
   it('should process payment and create outbox event atomically', async () => {
     const order = await prismaConnection.order.create({
-      data: { id: 'test-uuid', amount: 5000, status: 'CREATED' }
+      data: { id: uuidv4(), amount: 5000, status: 'CREATED' }
     });
 
     const response = await request(server)
@@ -31,7 +32,7 @@ describe('Order Integration Tests', () => {
     });
 
     expect(outboxEvent).toBeDefined();
-    expect(outboxEvent?.eventType).toBe('OrderPaid');
+    expect(outboxEvent?.eventType).toBe('orderPaid');
     
     const payload = outboxEvent?.payload as any;
     expect(payload).toHaveProperty('orderId', order.id);

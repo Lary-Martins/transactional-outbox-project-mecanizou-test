@@ -1,9 +1,14 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
-export default {
-  preset: 'ts-jest',
+module.exports = {
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
+  extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  moduleFileExtensions: ['ts', 'js', 'json', 'node'],
+  transform: {
+    '^.+\\.ts$': ['ts-jest', { useESM: true }],
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid)/)',
+  ],
 };
