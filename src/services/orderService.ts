@@ -4,59 +4,91 @@ import { StatusCodes } from 'http-status-codes';
 import { PrismaClient } from '@prisma/client';
 
 export class OrderService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClient) { }
 
-  public async createOrder(data: { amount: number }): Promise<IOrderResponse> {
+  private async publishEvent(eventType: EventType, payload: any): Promise<void> {
     try {
-      const order = {
-        id: uuidv4(),
-        amount: data.amount,
-        status: OrderStatus.CREATED
+      const eventId = uuidv4();
+      const event = {
+        id: eventId,
+        eventType: eventType,
+        status: 'PENDING' as const,
+        payload: {
+          eventId: eventId,
+          eventType: eventType,
+          orderId: payload.id,
+          amount: payload.amount,
+          occurredAt: new Date().toISOString()
+        }
       }
-
-      const response = await this.prisma.order.create({data: order});
-      return {code: StatusCodes.CREATED, data: response};
-    } catch(error) {
+      await this.prisma.outboxEvent.create({ data: event });
+    } catch (error) {
       const message = error as string;
       throw new Error(message);
     }
-  
+  }
+
+  public async createOrder(payload: { amount: number }): Promise<IOrderResponse> {
+    try {
+      const orderData = {
+        id: uuidv4(),
+        amount: payload.amount,
+        status: OrderStatus.CREATED as const
+      }
+
+      const response = await this.prisma.order.create({ data: orderData });
+      if (!response) {
+        return {code: StatusCodes.BAD_REQUEST, message: 'Order not created'};
+      }
+
+      return {
+        code: StatusCodes.CREATED,
+        message: {
+          id: response.id,
+          amount: response.amount,
+          status: OrderStatus.CREATED
+        }
+      };
+    } catch (error) {
+      const message = error as string;
+      throw new Error(message);
+    }
   }
 
   public async payOrder(orderId: string): Promise<IOrderResponse> {
     try {
       const result = await this.prisma.$transaction(async (tx) => {
         const order = await tx.order.findUnique({ where: { id: orderId } });
-        
+
         if (!order) {
-          return { code: StatusCodes.NOT_FOUND, data: { error: 'Order not found' } };
+          return {code: StatusCodes.NOT_FOUND, message: 'Order not found'};
         }
         if (order.status === OrderStatus.PAID) {
-          return { code: StatusCodes.OK, data: order };
+          return {
+            code: StatusCodes.OK,
+            message: {
+              id: order.id,
+              amount: order.amount,
+              status: OrderStatus.PAID
+            }
+          };
         }
-        
+
         const updatedOrder = await tx.order.update({
           where: { id: orderId },
           data: { status: OrderStatus.PAID }
         });
 
-        const eventId = uuidv4();
-        await tx.outboxEvent.create({
-          data: {
-            id: eventId,
-            eventType: EventType.OrderPaid,
-            status: OrderStatus.PENDING,
-            payload: {
-              eventId: eventId,
-              eventType: 'OrderPaid',
-              orderId: updatedOrder.id,
-              amount: updatedOrder.amount,
-              occurredAt: new Date().toISOString()
-            }
-          }
-        });
+        await this.publishEvent(EventType.OrderPaid, updatedOrder);
 
-        return { code: StatusCodes.OK, data: updatedOrder };
+        return {
+          code: StatusCodes.OK,
+          message: {
+            id: updatedOrder.id,
+            amount: updatedOrder.amount,
+            status: OrderStatus.PAID
+          }
+        };
       });
       return result;
     } catch (error) {
@@ -64,4 +96,5 @@ export class OrderService {
       throw new Error(message);
     }
   }
+
 }
