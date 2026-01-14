@@ -27,9 +27,9 @@ export default class App {
     });
   }
 
-  public async dbConnection(): Promise <void> {
+  public dbConnection(): void {
     try {
-      await prismaConnection;
+      prismaConnection;
       console.log('Database online');
     } catch (error) {
       console.log(error);
@@ -38,7 +38,7 @@ export default class App {
 
   public middlewares(): void {
     this.app.use(express.json());
-    this.app.use(morgan("dev"));
+    this.app.use(morgan(":method :url :status :response-time"));
   }
 
   public routes(): void {
