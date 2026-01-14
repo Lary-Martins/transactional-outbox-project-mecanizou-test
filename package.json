@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "npx prisma generate && npx tsx src/server.ts",
+    "start": "npx tsx src/server.ts",
     "test": "npx prisma generate && NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "db:setup": "prisma generate && prisma db push"
   },
